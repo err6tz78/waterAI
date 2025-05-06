@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from "react";
-import { Settings, RefreshCw, MapPin } from "lucide-react";
+import { Settings, RefreshCw, MapPin, Search } from "lucide-react";
 import { Button } from "./ui/button";
 import SearchBar from "./SearchBar";
 import { Tabs, TabsList, TabsTrigger, TabsContent } from "./ui/tabs";
@@ -22,9 +22,10 @@ const Home = () => {
   );
   const [activeTab, setActiveTab] = useState("list");
   const [showDetail, setShowDetail] = useState(false);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
 
   // Simulate location permission check
-  React.useEffect(() => {
+  useEffect(() => {
     setTimeout(() => {
       setLocationStatus("granted");
     }, 1000);
@@ -53,6 +54,7 @@ const Home = () => {
   const handleSelectWaterBody = (waterBody: WaterBody) => {
     setSelectedWaterBody(waterBody);
     setShowDetail(true);
+    setIsSidebarOpen(false);
   };
 
   const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -61,6 +63,10 @@ const Home = () => {
 
   const handleBackFromDetail = () => {
     setShowDetail(false);
+  };
+
+  const toggleSidebar = () => {
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   // If showing detail view, render the WaterBodyDetail component
@@ -111,31 +117,49 @@ const Home = () => {
   }
 
   return (
-    <div className="flex flex-col min-h-screen bg-gradient-to-b from-gray-900 to-gray-800 text-white font-sans">
+    <div className="flex flex-col min-h-screen bg-[#1e1e42] text-white font-sans">
       {/* Header */}
-      <header className="sticky top-0 z-20 bg-gray-900/80 backdrop-blur-md border-b border-gray-700/50 p-4 flex justify-between items-center shadow-lg">
-        <div className="flex items-center">
-          <h1 className="text-2xl font-bold bg-clip-text text-transparent bg-gradient-to-r from-blue-400 to-purple-500">
+      <header className="sticky top-0 z-30 bg-[#1e1e42]/80 backdrop-blur-lg p-4 flex items-center justify-between shadow-sm border-b border-[#2a2a5a]/30">
+        <div className="flex items-center gap-4">
+          <Button
+            variant="ghost"
+            size="icon"
+            className="lg:hidden text-white hover:bg-[#2a2a5a]/70 rounded-full p-2 transition-all duration-200"
+            onClick={toggleSidebar}
+          >
+            <svg
+              className="w-5 h-5"
+              fill="none"
+              stroke="currentColor"
+              viewBox="0 0 24 24"
+            >
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth="2"
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            </svg>
+          </Button>
+          <h1 className="text-xl font-semibold tracking-tight">
             Water Level Tracker
           </h1>
-          <div className="ml-4 flex items-center">
-            {locationStatus === "loading" ? (
-              <span className="text-sm text-gray-400 animate-pulse flex items-center">
-                <MapPin size={16} className="mr-1" />
-                Locating...
-              </span>
-            ) : locationStatus === "granted" ? (
-              <div className="flex items-center text-sm text-blue-400">
-                <MapPin size={16} className="mr-1" />
-                <span>Location active</span>
-              </div>
-            ) : (
-              <span className="text-sm text-red-400 flex items-center">
-                <MapPin size={16} className="mr-1" />
-                Location access denied
-              </span>
-            )}
-          </div>
+          {locationStatus === "loading" ? (
+            <span className="text-xs text-gray-400 animate-pulse flex items-center">
+              <MapPin size={14} className="mr-1" />
+              Locating...
+            </span>
+          ) : locationStatus === "granted" ? (
+            <span className="text-xs text-[#3a8cff] flex items-center">
+              <MapPin size={14} className="mr-1" />
+              Location active
+            </span>
+          ) : (
+            <span className="text-xs text-[#ff3a8c] flex items-center">
+              <MapPin size={14} className="mr-1" />
+              Location access denied
+            </span>
+          )}
         </div>
         <div className="flex items-center gap-2">
           <Button
@@ -143,76 +167,119 @@ const Home = () => {
             size="icon"
             onClick={handleRefresh}
             disabled={isRefreshing}
-            className={`text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-200 ${isRefreshing ? "animate-spin" : ""}`}
+            className={`text-white hover:bg-[#2a2a5a]/70 rounded-full p-2 transition-all duration-200 ${isRefreshing ? "animate-spin" : ""}`}
           >
-            <RefreshCw size={20} />
+            <RefreshCw size={18} />
           </Button>
           <Button
             variant="ghost"
             size="icon"
-            className="text-gray-300 hover:bg-gray-700/50 hover:text-white transition-all duration-200"
+            className="text-white hover:bg-[#2a2a5a]/70 rounded-full p-2 transition-all duration-200"
           >
-            <Settings size={20} />
+            <Settings size={18} />
           </Button>
         </div>
       </header>
 
-      {/* Search Bar */}
-      <div className="px-6 py-4 border-b border-gray-700/50">
-        <SearchBar
-          value={searchQuery}
-          onChange={handleSearchChange}
-          placeholder="Search water bodies..."
-          className="w-full p-3 bg-gray-800/50 border border-gray-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all duration-200"
-        />
+      {/* Main Content with Sidebar Layout */}
+      <div className="flex flex-1 flex-col lg:flex-row gap-6 p-6 max-w-7xl mx-auto w-full">
+        {/* Sidebar for Search and Tabs */}
+        <aside
+          className={`lg:w-80 bg-[#1e1e42]/90 p-5 rounded-2xl border border-[#2a2a5a]/30 shadow-lg transition-all duration-300 lg:block ${
+            isSidebarOpen
+              ? "block absolute top-0 left-0 h-full z-40 w-64 bg-[#1e1e42]"
+              : "hidden"
+          }`}
+        >
+          <div className="flex justify-between items-center mb-6 lg:mb-6">
+            <h2 className="text-lg font-medium">Filters</h2>
+            <Button
+              variant="ghost"
+              size="icon"
+              className="lg:hidden text-white hover:bg-[#2a2a5a]/70 rounded-full p-2"
+              onClick={toggleSidebar}
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </Button>
+          </div>
+          <div className="relative mb-6">
+            <Search
+              size={18}
+              className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+            />
+            <SearchBar
+              value={searchQuery}
+              onChange={handleSearchChange}
+              placeholder="Search water bodies..."
+              className="w-full pl-10 pr-4 py-3 bg-[#2a2a5a]/20 border border-[#2a2a5a]/40 rounded-xl text-white placeholder-gray-400/60 focus:outline-none focus:ring-2 focus:ring-[#3a8cff]/40 focus:bg-[#2a2a5a]/30 transition-all duration-300 shadow-sm"
+            />
+          </div>
+          <Tabs
+            defaultValue="list"
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsList className="grid grid-cols-2 bg-[#2a2a5a]/20 rounded-xl p-1.5 gap-2">
+              <TabsTrigger
+                value="list"
+                className="data-[state=active]:bg-[#ff3a8c] data-[state=active]:text-white rounded-lg py-2.5 font-medium transition-all duration-200 hover:bg-[#2a2a5a]/40 text-sm"
+              >
+                List View
+              </TabsTrigger>
+              <TabsTrigger
+                value="map"
+                className="data-[state=active]:bg-[#ff3a8c] data-[state=active]:text-white rounded-lg py-2.5 font-medium transition-all duration-200 hover:bg-[#2a2a5a]/40 text-sm"
+              >
+                Map View
+              </TabsTrigger>
+            </TabsList>
+          </Tabs>
+        </aside>
+
+        {/* Main Content Area */}
+        <main className="flex-1 bg-[#1e1e42]/90 rounded-2xl border border-[#2a2a5a]/30 p-6 shadow-lg">
+          <Tabs
+            defaultValue="list"
+            value={activeTab}
+            onValueChange={setActiveTab}
+            className="w-full"
+          >
+            <TabsContent value="list" className="mt-0">
+              {locationStatus === "denied" ? (
+                <LocationDeniedMessage />
+              ) : (
+                <WaterBodyList
+                  searchQuery={debouncedSearchQuery}
+                  onSelectWaterBody={handleSelectWaterBody}
+                />
+              )}
+            </TabsContent>
+            <TabsContent value="map" className="mt-0">
+              {locationStatus === "denied" ? (
+                <LocationDeniedMessage />
+              ) : (
+                <MapView onSelectWaterBody={handleSelectWaterBody} />
+              )}
+            </TabsContent>
+          </Tabs>
+        </main>
       </div>
 
-      {/* Main Content */}
-      <main className="flex-1 p-6">
-        <Tabs
-          defaultValue="list"
-          value={activeTab}
-          onValueChange={setActiveTab}
-          className="w-full"
-        >
-          <TabsList className="grid w-full grid-cols-2 mb-6 bg-gray-800/50 rounded-lg p-1">
-            <TabsTrigger
-              value="list"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white rounded-md py-2 transition-all duration-200"
-            >
-              List View
-            </TabsTrigger>
-            <TabsTrigger
-              value="map"
-              className="data-[state=active]:bg-gradient-to-r data-[state=active]:from-blue-500 data-[state=active]:to-purple-500 data-[state=active]:text-white rounded-md py-2 transition-all duration-200"
-            >
-              Map View
-            </TabsTrigger>
-          </TabsList>
-
-          <TabsContent value="list" className="mt-2">
-            {locationStatus === "denied" ? (
-              <LocationDeniedMessage />
-            ) : (
-              <WaterBodyList
-                searchQuery={debouncedSearchQuery}
-                onSelectWaterBody={handleSelectWaterBody}
-              />
-            )}
-          </TabsContent>
-
-          <TabsContent value="map" className="mt-2">
-            {locationStatus === "denied" ? (
-              <LocationDeniedMessage />
-            ) : (
-              <MapView onSelectWaterBody={handleSelectWaterBody} />
-            )}
-          </TabsContent>
-        </Tabs>
-      </main>
-
       {/* Footer */}
-      <footer className="border-t border-gray-700/50 p-4 text-center text-sm text-gray-400 bg-gray-900/80">
+      <footer className="border-t border-[#2a2a5a]/50 p-4 text-center text-xs text-gray-400 bg-[#1e1e42]/95">
         <p>Water Level Tracker © {new Date().getFullYear()}</p>
       </footer>
     </div>
@@ -221,18 +288,16 @@ const Home = () => {
 
 const LocationDeniedMessage = () => {
   return (
-    <Card className="p-8 flex flex-col items-center justify-center text-center bg-gray-800/50 border-gray-700/50 shadow-xl rounded-xl">
-      <MapPin size={64} className="text-gray-400 mb-4 animate-pulse" />
-      <h3 className="text-xl font-semibold text-white mb-2">
-        Location Access Required
-      </h3>
-      <p className="text-gray-400 mb-6 max-w-md">
+    <Card className="p-8 flex flex-col items-center justify-center text-center bg-[#2a2a5a]/20 border-[#2a2a5a]/40 rounded-2xl shadow-md">
+      <MapPin size={48} className="text-gray-400 mb-4 animate-pulse" />
+      <h3 className="text-lg font-medium mb-2">Location Access Required</h3>
+      <p className="text-gray-400 mb-6 max-w-md text-sm">
         To show water bodies near you, we need access to your location. Please
         enable location services in your browser settings.
       </p>
       <Button
         onClick={() => window.location.reload()}
-        className="bg-gradient-to-r from-blue-500 to-purple-500 hover:from-blue-600 hover:to-purple-600 text-white font-medium py-2 px-6 rounded-lg transition-all duration-200"
+        className="bg-[#ff3a8c] hover:bg-[#ff3a8c]/80 text-white py-2 px-6 rounded-lg transition-all duration-200 shadow-sm text-sm"
       >
         Try Again
       </Button>
